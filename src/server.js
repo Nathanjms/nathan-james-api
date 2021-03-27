@@ -2,6 +2,8 @@ import express from "express";
 import { MongoClient } from "mongodb";
 import cors from "cors";
 
+require("dotenv").config();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -65,7 +67,11 @@ app.post("/api/movies/mark-seen", async (req, res) => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-  if (req.body.userId != 1) {
+
+  const validIds = process.env.PERMITTED_USER_ID.split(",");
+  const isValidId = validIds.includes(req.body.userId);
+
+  if (!isValidId) {
     res.status(403).json("Invalid user ID.");
   } else {
     const db = client.db("website");
