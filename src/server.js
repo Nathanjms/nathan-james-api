@@ -70,7 +70,7 @@ app.post("/api/movies/mark-seen", async (req, res) => {
   } else {
     const db = client.db("website");
     try {
-      const result = await db.collection("movies").findOneAndUpdate(
+      const result = await db.collection("movies").updateOne(
         {
           id: req.body.movieId,
         },
@@ -83,7 +83,7 @@ app.post("/api/movies/mark-seen", async (req, res) => {
       if (result) {
         res.status(200).json(result);
       } else {
-        res.status(404).json("Could not create the movie");
+        res.status(404).json("Could not find the movie");
       }
     } catch (error) {
       res.status(500).json(`${error.message}`);
