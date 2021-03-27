@@ -65,21 +65,29 @@ app.post("/api/movies/mark-seen", async (req, res) => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-  const db = client.db("website");
-  try {
-    const result = await db.collection("movies").insertOne({
-      title: "NathanJms",
-      rank: "101",
-      id: "tt0239848230548",
-      seen: 0,
-    });
-    if (result) {
-      res.status(200).json(result);
-    } else {
-      res.status(404).json("Could not create the movie");
+  if (req.body.userId != 1) {
+    res.status(403).json("Invalid user ID.");
+  } else {
+    const db = client.db("website");
+    try {
+      const result = await db.collection("movies").findOneAndUpdate(
+        {
+          id: req.body.movieId,
+        },
+        {
+          $set: {
+            seen: 1,
+          },
+        }
+      );
+      if (result) {
+        res.status(200).json(result);
+      } else {
+        res.status(404).json("Could not create the movie");
+      }
+    } catch (error) {
+      res.status(500).json(`${error.message}`);
     }
-  } catch (error) {
-    res.status(404).json(`${error.message}`);
   }
   client.close();
 });
