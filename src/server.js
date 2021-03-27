@@ -8,30 +8,39 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const baseURL =
+  process.env.MONGO_USER && process.env.MONGO_PASS
+    ? `mongodb+srv://${process.env.MONGO_PASS}:${process.env.MONGO_USER}@cluster0.e8xrb.mongodb.net/${process.env.MONGO_DBNAME}?retryWrites=true&w=majority`
+    : "mongodb://localhost:27017";
+
 app.get("/api/movies", async (req, res) => {
   var limit = 0;
   if (req.query.limit && req.query.limit > 0) {
     var limit = parseInt(req.query.limit);
   }
-  const client = await MongoClient.connect("mongodb://localhost:27017", {
+  const client = await MongoClient.connect(baseURL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
 
-  const db = client.db("website");
-  const movies = await db.collection("movies").find().limit(limit).toArray();
+  const db = client.db(process.env.MONGO_DBNAME || "website");
+  const movies = await db
+    .collection("imdb_movies")
+    .find()
+    .limit(limit)
+    .toArray();
   res.status(200).json(movies);
   client.close();
 });
 
 app.get("/api/movies/(:movieId)", async (req, res) => {
-  const client = await MongoClient.connect("mongodb://localhost:27017", {
+  const client = await MongoClient.connect(baseURL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-  const db = client.db("website");
+  const db = client.db(process.env.MONGO_DBNAME || "website");
   const { movieId } = req.params;
-  const movie = await db.collection("movies").findOne({ id: movieId });
+  const movie = await db.collection("imdb_movies").findOne({ id: movieId });
   if (movie) {
     res.status(200).json(movie);
   } else {
@@ -41,16 +50,14 @@ app.get("/api/movies/(:movieId)", async (req, res) => {
 });
 
 app.post("/api/movies/add", async (req, res) => {
-  const client = await MongoClient.connect("mongodb://localhost:27017", {
+  const client = await MongoClient.connect(baseURL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-  const db = client.db("website");
+  const db = client.db(process.env.MONGO_DBNAME || "website");
   try {
     const newMovie = req.body;
-    console.log(newMovie);
-    const result = await db.collection("movies").insertOne(newMovie);
-    console.log(result);
+    const result = await db.collection("imdb_movies").insertOne(newMovie);
     if (result) {
       res.status(200).json(result);
     } else {
@@ -63,7 +70,7 @@ app.post("/api/movies/add", async (req, res) => {
 });
 
 app.post("/api/movies/mark-seen", async (req, res) => {
-  const client = await MongoClient.connect("mongodb://localhost:27017", {
+  const client = await MongoClient.connect(baseURL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
@@ -74,9 +81,9 @@ app.post("/api/movies/mark-seen", async (req, res) => {
   if (!isValidId) {
     res.status(403).json("Invalid user ID.");
   } else {
-    const db = client.db("website");
+    const db = client.db(process.env.MONGO_DBNAME || "website");
     try {
-      const result = await db.collection("movies").updateOne(
+      const result = await db.collection("imdb_movies").updateOne(
         {
           id: req.body.movieId,
         },
@@ -98,6 +105,6 @@ app.post("/api/movies/mark-seen", async (req, res) => {
   client.close();
 });
 
-app.listen(8000, () => {
+app.listen(process.env.PORT || 8000, () => {
   console.log("Server is listening on port 8000...");
 });
