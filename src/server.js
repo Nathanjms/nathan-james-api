@@ -1,18 +1,25 @@
 import express from "express";
 import { MongoClient } from "mongodb";
+import cors from "cors";
+
+require("dotenv").config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.get("/api/movies", async (req, res) => {
+  var limit = 0;
+  if (req.query.limit && req.query.limit > 0) {
+    var limit = parseInt(req.query.limit);
+  }
   const client = await MongoClient.connect("mongodb://localhost:27017", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
 
   const db = client.db("website");
-  const movies = await db.collection("movies").find({}).toArray();
-
+  const movies = await db.collection("movies").find().limit(limit).toArray();
   res.status(200).json(movies);
   client.close();
 });
@@ -60,21 +67,33 @@ app.post("/api/movies/mark-seen", async (req, res) => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-  const db = client.db("website");
-  try {
-    const result = await db.collection("movies").insertOne({
-      title: "NathanJms",
-      rank: "101",
-      id: "tt0239848230548",
-      seen: 0,
-    });
-    if (result) {
-      res.status(200).json(result);
-    } else {
-      res.status(404).json("Could not create the movie");
+
+  const validIds = process.env.PERMITTED_USER_ID.split(",");
+  const isValidId = validIds.includes(req.body.userId);
+
+  if (!isValidId) {
+    res.status(403).json("Invalid user ID.");
+  } else {
+    const db = client.db("website");
+    try {
+      const result = await db.collection("movies").updateOne(
+        {
+          id: req.body.movieId,
+        },
+        {
+          $set: {
+            seen: 1,
+          },
+        }
+      );
+      if (result) {
+        res.status(200).json(result);
+      } else {
+        res.status(404).json("Could not find the movie");
+      }
+    } catch (error) {
+      res.status(500).json(`${error.message}`);
     }
-  } catch (error) {
-    res.status(404).json(`${error.message}`);
   }
   client.close();
 });
