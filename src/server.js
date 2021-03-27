@@ -7,14 +7,17 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/movies", async (req, res) => {
+  var limit = 0;
+  if (req.query.limit && req.query.limit > 0) {
+    var limit = parseInt(req.query.limit);
+  }
   const client = await MongoClient.connect("mongodb://localhost:27017", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
 
   const db = client.db("website");
-  const movies = await db.collection("movies").find({}).toArray();
-
+  const movies = await db.collection("movies").find().limit(limit).toArray();
   res.status(200).json(movies);
   client.close();
 });
