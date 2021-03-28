@@ -18,7 +18,6 @@ app.get("/api/movies", async (req, res) => {
   if (req.query.limit && req.query.limit > 0) {
     var limit = parseInt(req.query.limit);
   }
-  console.log(baseURL);
   const client = await MongoClient.connect(baseURL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
