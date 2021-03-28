@@ -13,6 +13,17 @@ const baseURL =
     ? `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.e8xrb.mongodb.net/${process.env.MONGO_DBNAME}?retryWrites=true&w=majority`
     : "mongodb://localhost:27017";
 
+app.get("/", async (req, res) => {
+  const client = await MongoClient.connect(baseURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  res
+    .status(200)
+    .json({ greeting: "Welcome to my API!", author: "Nathan James" });
+  client.close();
+});
+
 app.get("/api/(:collection)/movies", async (req, res) => {
   var limit = 0;
   var collection = req.params.collection;
