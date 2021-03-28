@@ -27,13 +27,23 @@ app.get("/api/(:collection)/movies", async (req, res) => {
   if (req.query.limit && req.query.limit > 0) {
     var limit = parseInt(req.query.limit);
   }
+  var query = {};
+  if (req.query.watched == "true") {
+    query = { $or: [{ seen: true }, { seen: 1 }] }; // 1 for legacy.
+  } else {
+    query = { seen: false };
+  }
   const client = await MongoClient.connect(baseURL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
 
   const db = client.db(process.env.MONGO_DBNAME || "website");
-  const movies = await db.collection(collection).find().limit(limit).toArray();
+  const movies = await db
+    .collection(collection)
+    .find(query)
+    .limit(limit)
+    .toArray();
   res.status(200).json(movies);
   client.close();
 });
@@ -119,5 +129,5 @@ app.post("/api/movies/mark-seen", async (req, res) => {
 });
 
 app.listen(process.env.PORT || 8000, () => {
-  console.log("Server is listening");
+  console.log("Server is listening...");
 });
