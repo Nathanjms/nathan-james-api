@@ -98,7 +98,7 @@ app.post("/api/movies/mark-seen", async (req, res) => {
           },
           {
             $set: {
-              seen: 1,
+              seen: true,
             },
           }
         );
