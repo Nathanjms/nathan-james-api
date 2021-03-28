@@ -10,7 +10,7 @@ app.use(express.json());
 
 const baseURL =
   process.env.MONGO_USER && process.env.MONGO_PASS
-    ? `mongodb+srv://${process.env.MONGO_PASS}:${process.env.MONGO_USER}@cluster0.e8xrb.mongodb.net/${process.env.MONGO_DBNAME}?retryWrites=true&w=majority`
+    ? `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.e8xrb.mongodb.net/${process.env.MONGO_DBNAME}?retryWrites=true&w=majority`
     : "mongodb://localhost:27017";
 
 app.get("/api/movies", async (req, res) => {
@@ -18,6 +18,7 @@ app.get("/api/movies", async (req, res) => {
   if (req.query.limit && req.query.limit > 0) {
     var limit = parseInt(req.query.limit);
   }
+  console.log(baseURL);
   const client = await MongoClient.connect(baseURL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
